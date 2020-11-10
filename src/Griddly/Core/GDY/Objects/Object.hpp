@@ -57,6 +57,8 @@ class Object : public std::enable_shared_from_this<Object> {
 
   virtual uint32_t getObjectId() const;
 
+  virtual char getObjectCharFromName(std::string objectName) const;
+
   virtual std::string getDescription() const;
 
   virtual uint32_t getPlayerId() const;

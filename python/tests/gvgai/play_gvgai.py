@@ -2,7 +2,7 @@ import numpy as np
 from timeit import default_timer as timer
 
 from griddly import gd, GriddlyLoader
-from griddly.RenderTools import RenderWindow
+from griddly.RenderTools import RenderWindow, RenderToFile
 
 window = None
 
@@ -26,7 +26,6 @@ if __name__ == '__main__':
     start = timer()
 
     frames = 0
-
     # Player objects have the same interface as gym environments
     for l in range(0, 5000):
         grid.load_level(l)
@@ -38,7 +37,7 @@ if __name__ == '__main__':
 
             reward, done, info = player1.step("move", [dir])
 
-            #player1_tiles = player1.observe()
+            player1_tiles = np.array(player1.observe(), copy=False)
 
             observation = np.array(game.observe(), copy=False)
             renderWindow.render(observation)
@@ -53,8 +52,3 @@ if __name__ == '__main__':
                 print(f'fps: {frames / (end - start)}')
                 frames = 0
                 start = timer()
-
-
-
-
-

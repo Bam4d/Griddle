@@ -1,4 +1,3 @@
-
 #include "Griddly/Core/Observers/BlockObserver.hpp"
 #include "VulkanObserverTest.hpp"
 #include "gmock/gmock.h"

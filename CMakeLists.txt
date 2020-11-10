@@ -38,16 +38,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # GLM
 add_subdirectory("libs/glm")
 
-# PyBind
-add_subdirectory("libs/pybind11")
-
 # Yaml-Cpp
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "disable yaml tests")
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "disable yaml tools")
 set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "disable yaml contrib")
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "disable shared libs")
 add_subdirectory("libs/yaml-cpp")
-
 
 find_package(Vulkan REQUIRED FATAL_ERROR)
 set(VULKAN_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/Griddly/Core/Observers/Vulkan/resources/shaders)
@@ -77,20 +73,24 @@ include_directories(${STB_DIR})
 add_library(${BINARY} STATIC ${GRIDDLY_SOURCES})
 target_link_libraries(${BINARY} PRIVATE Vulkan::Vulkan yaml-cpp glm)
 
-# Add the pybind11 module
-set(PYTHON_MODULE python_griddly)
-pybind11_add_module(${PYTHON_MODULE} bindings/python.cpp)
+find_package(JlCxx REQUIRED)
+include_directories(${Julia_INCLUDE_DIRS})
+get_target_property(JlCxx_location JlCxx::cxxwrap_julia LOCATION)
+get_filename_component(JlCxx_location ${JlCxx_location} DIRECTORY)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;${JlCxx_location}")
 
-# Want the python lib to be output in the same directory as the other dll/so
+message(STATUS "Found JlCxx at ${JlCxx_location}")
+
+add_library(JuGriddly SHARED bindings/julia.cpp)
+
 if(MSVC)
     foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
         string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-        set_target_properties(${PYTHON_MODULE} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BIN_OUTPUT_DIR})
+        set_target_properties(JuGriddly PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BIN_OUTPUT_DIR})
     endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 endif()
-
-set_target_properties(${PYTHON_MODULE} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${BIN_OUTPUT_DIR})
-target_link_libraries(${PYTHON_MODULE} PRIVATE ${BINARY} Vulkan::Vulkan yaml-cpp glm)
+set_target_properties(JuGriddly PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${BIN_OUTPUT_DIR})
+target_link_libraries(JuGriddly PRIVATE JlCxx::cxxwrap_julia ${BINARY} Vulkan::Vulkan yaml-cpp glm)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
